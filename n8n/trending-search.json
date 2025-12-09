@@ -1,0 +1,160 @@
+{
+    "name": "Trending Topics Search Workflow",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "search-trends",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-node",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [250, 300],
+        "webhookId": "search-trends-webhook"
+      },
+      {
+        "parameters": {
+          "values": {
+            "string": [
+              {
+                "name": "query",
+                "value": "={{ $json.body.query }}"
+              },
+              {
+                "name": "platform",
+                "value": "={{ $json.body.platform }}"
+              },
+              {
+                "name": "category",
+                "value": "={{ $json.body.category }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "set-node",
+        "name": "Extract Parameters",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 1,
+        "position": [450, 300]
+      },
+      {
+        "parameters": {
+          "url": "https://newsapi.org/v2/everything",
+          "authentication": "none",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "={{ $json.query }}"
+              },
+              {
+                "name": "pageSize",
+                "value": "5"
+              },
+              {
+                "name": "language",
+                "value": "en"
+              },
+              {
+                "name": "sortBy",
+                "value": "popularity"
+              },
+              {
+                "name": "apiKey",
+                "value": "YOUR_NEWSAPI_KEY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "http-request-node",
+        "name": "NewsAPI Request",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 3,
+        "position": [650, 300]
+      },
+      {
+        "parameters": {
+          "jsCode": "const platform = $('Extract Parameters').item.json.platform || 'all';\nconst category = $('Extract Parameters').item.json.category || 'all';\nconst articles = $input.item.json.articles || [];\n\nconst topics = articles.map((article, index) => {\n  const platformName = platform === 'all' ? ['LinkedIn', 'Instagram', 'YouTube'][index % 3] : platform;\n  \n  return {\n    id: `topic-${Date.now()}-${index}`,\n    topic: article.title || 'Trending Topic',\n    platform: platformName,\n    engagement: Math.floor(Math.random() * 50000) + 10000,\n    views: Math.floor(Math.random() * 500000) + 50000,\n    posts: Math.floor(Math.random() * 5000) + 1000,\n    growthRate: `+${Math.floor(Math.random() * 50) + 10}%`,\n    category: category === 'all' ? 'Technology' : category,\n    keywords: article.description ? article.description.split(' ').slice(0, 5) : ['trending', 'viral', 'popular', 'content', 'social'],\n    suggestedContent: article.description || 'Create engaging content around this trending topic to maximize engagement.',\n    bestTimeToPost: platformName === 'LinkedIn' ? '9 AM - 12 PM Weekdays' : platformName === 'Instagram' ? '6 PM - 9 PM Daily' : '12 PM - 3 PM Daily',\n    targetAudience: platformName === 'LinkedIn' ? 'Professionals & B2B' : platformName === 'Instagram' ? 'Young Adults 18-34' : 'General Audience'\n  };\n});\n\nreturn { json: { topics } };"
+        },
+        "id": "code-node",
+        "name": "Format Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [850, 300]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "id": "respond-node",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [1050, 300]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Extract Parameters",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Parameters": {
+        "main": [
+          [
+            {
+              "node": "NewsAPI Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NewsAPI Request": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Response": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "pinData": {},
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "tags": [],
+    "triggerCount": 0,
+    "updatedAt": "2025-12-09T16:57:00.000Z",
+    "versionId": "1"
+  }
+  
