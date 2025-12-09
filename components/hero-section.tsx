@@ -21,17 +21,35 @@ export function HeroSection({ onAuthClick }: HeroSectionProps) {
       {/* Content Below Hero - CTA Buttons and Stats */}
       <div className="relative z-30 flex flex-col items-center justify-center px-4 w-full">
         <div className="flex flex-col items-center text-center space-y-16 w-full max-w-7xl mx-auto">
-          {/* CTA Buttons */}
+          {/* CTA Buttons with Interactive Hover Effect */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
+            {/* Get Started Button */}
             <button
               onClick={onAuthClick}
-              className="group relative inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-8 py-4 text-lg font-bold text-white transition-all hover:shadow-lg hover:shadow-purple-500/50 hover:scale-105 active:scale-95"
+              className="group relative overflow-hidden inline-flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-8 py-4 text-lg font-bold text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 min-w-[220px]"
             >
-              Get Started Free
-              <ArrowRight className="transition-transform group-hover:translate-x-1" size={20} />
+              <span className="relative z-20 inline-flex items-center gap-2 transition-all duration-500 ease-out group-hover:translate-x-[200%] group-hover:opacity-0">
+                Get Started Free
+              </span>
+              <div className="absolute inset-0 z-20 flex items-center justify-center gap-2 transition-all duration-500 ease-out -translate-x-[200%] opacity-0 group-hover:translate-x-0 group-hover:opacity-100">
+                <span>Get Started Free</span>
+                <ArrowRight size={20} />
+              </div>
+              <div className="absolute left-[50%] top-[50%] -translate-x-1/2 -translate-y-1/2 h-0 w-0 rounded-full bg-white/20 transition-all duration-500 ease-out group-hover:h-[300%] group-hover:w-[300%]"></div>
             </button>
-            <button className="rounded-full border-2 border-purple-500/50 px-8 py-4 text-lg font-bold text-white transition-all hover:border-purple-500 hover:bg-purple-500/10 hover:shadow-lg hover:shadow-purple-500/20 hover:scale-105 active:scale-95">
-              Watch Demo
+
+            {/* Watch Demo Button */}
+            <button 
+              className="group relative overflow-hidden rounded-full border-2 border-purple-500/50 bg-transparent px-8 py-4 text-lg font-bold text-white transition-all duration-300 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20 min-w-[200px]"
+            >
+              <span className="relative z-20 inline-flex items-center gap-2 transition-all duration-500 ease-out group-hover:translate-x-[200%] group-hover:opacity-0">
+                Watch Demo
+              </span>
+              <div className="absolute inset-0 z-20 flex items-center justify-center gap-2 transition-all duration-500 ease-out -translate-x-[200%] opacity-0 group-hover:translate-x-0 group-hover:opacity-100">
+                <span>Watch Demo</span>
+                <ArrowRight size={20} />
+              </div>
+              <div className="absolute left-[50%] top-[50%] -translate-x-1/2 -translate-y-1/2 h-0 w-0 rounded-full bg-purple-500/20 transition-all duration-500 ease-out group-hover:h-[300%] group-hover:w-[300%]"></div>
             </button>
           </div>
 
@@ -53,7 +71,7 @@ export function HeroSection({ onAuthClick }: HeroSectionProps) {
               <p className="text-sm sm:text-base text-white/60 font-medium">Earned by Creators</p>
             </div>
             
-            <div className="hidden sm:block h-16 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+            <div className="hidden sm:block h-16 w-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             
             <div className="flex flex-col items-center justify-center text-center">
               <div className="text-4xl sm:text-5xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text mb-2">

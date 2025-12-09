@@ -1,0 +1,5 @@
+{
+  "/api/search-trends/route": "app/api/search-trends/route.js",
+  "/page": "app/page.js",
+  "/trending-topic-search/page": "app/trending-topic-search/page.js"
+}

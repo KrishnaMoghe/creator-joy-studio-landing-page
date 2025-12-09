@@ -1,0 +1,109 @@
+{
+  "name": "AI Video to Multiple Viral Clips",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-clips",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-01",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.klap.app/v2/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <YOUR_KLAP_API_KEY>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_url\": \"{{ $json.body.videoUrl }}\",\n  \"user_id\": \"{{ $json.body.userId }}\"\n}",
+        "options": {}
+      },
+      "id": "klap-generate-01",
+      "name": "Generate Clips with Klap",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "wait-02",
+      "name": "Wait for AI Processing",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.klap.app/v2/status/{{ $json.job_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <YOUR_KLAP_API_KEY>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "check-status-01",
+      "name": "Check Processing Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-01",
+      "name": "Return Clips to User",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [{ "node": "Generate Clips with Klap", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Clips with Klap": {
+      "main": [
+        [{ "node": "Wait for AI Processing", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait for AI Processing": {
+      "main": [
+        [{ "node": "Check Processing Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Processing Status": {
+      "main": [
+        [{ "node": "Return Clips to User", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}
