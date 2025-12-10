@@ -55,9 +55,51 @@ async function POST(request) {
         const body = await request.json();
         console.log("📥 Received trend search request:", body);
         const { query, platform, category, userId } = body;
-        // Simulate AI analysis (3 seconds)
+        // Try calling n8n webhook first
+        let webhookSuccess = false;
+        let webhookData = null;
+        try {
+            const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/search-trends';
+            console.log("🔗 Calling n8n webhook:", n8nWebhookUrl);
+            const webhookResponse = await fetch(n8nWebhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: query,
+                    platform: platform,
+                    category: category,
+                    userId: userId
+                }),
+                signal: AbortSignal.timeout(10000) // 10 second timeout
+            });
+            if (webhookResponse.ok) {
+                webhookData = await webhookResponse.json();
+                webhookSuccess = true;
+                console.log("✅ n8n webhook successful");
+                return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                    success: true,
+                    message: `Found ${webhookData.topics?.length || 0} trending topics`,
+                    topics: webhookData.topics || [],
+                    source: "n8n-webhook",
+                    metadata: {
+                        userId: userId,
+                        query: query,
+                        platform: platform,
+                        category: category,
+                        totalResults: webhookData.topics?.length || 0
+                    }
+                });
+            } else {
+                console.warn("⚠️ n8n webhook returned error:", webhookResponse.status);
+            }
+        } catch (webhookError) {
+            console.error("❌ n8n webhook failed:", webhookError);
+        }
+        // Fallback to mock data if webhook fails
+        console.log("🔄 Using mock data fallback");
         await new Promise((resolve)=>setTimeout(resolve, 3000));
-        // Mock trending topics
         const trendingTopics = [
             {
                 id: `trend_1_${Date.now()}`,
@@ -162,15 +204,18 @@ async function POST(request) {
         ];
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             success: true,
-            message: `Found ${trendingTopics.length} trending topics`,
+            message: `⚠️ Webhook failed - showing ${trendingTopics.length} mock trending topics`,
+            warning: "n8n webhook is currently unavailable. Displaying sample data for demonstration purposes.",
             topics: trendingTopics,
+            source: "mock-fallback",
             metadata: {
                 userId: userId,
                 query: query,
                 platform: platform,
                 category: category,
-                searchTime: "3.2s",
-                totalResults: trendingTopics.length
+                searchTime: "3.0s",
+                totalResults: trendingTopics.length,
+                webhookStatus: "failed"
             }
         });
     } catch (error) {

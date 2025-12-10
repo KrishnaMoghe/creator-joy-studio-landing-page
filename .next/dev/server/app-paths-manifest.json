@@ -1,5 +1,8 @@
 {
-  "/api/search-trends/route": "app/api/search-trends/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/process-video/route": "app/api/process-video/route.js",
+  "/api/upload-video/route": "app/api/upload-video/route.js",
   "/page": "app/page.js",
+  "/smart-video-clips/page": "app/smart-video-clips/page.js",
   "/trending-topic-search/page": "app/trending-topic-search/page.js"
 }

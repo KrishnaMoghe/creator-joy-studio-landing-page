@@ -33,6 +33,35 @@ function SmartVideoClipsPage() {
     const [clips, setClips] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [uploadProgress, setUploadProgress] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const generateMockClips = (reason)=>{
+        console.log("🎬 Using mock clips. Reason:", reason);
+        const mockClips = [
+            {
+                id: `mock_clip_1_${Date.now()}`,
+                url: "/demo/demo-clip-1.mp4",
+                duration: 32,
+                platform: "Instagram"
+            },
+            {
+                id: `mock_clip_2_${Date.now()}`,
+                url: "/demo/demo-clip-2.mp4",
+                duration: 45,
+                platform: "YouTube"
+            },
+            {
+                id: `mock_clip_3_${Date.now()}`,
+                url: "/demo/demo-clip-3.mp4",
+                duration: 28,
+                platform: "LinkedIn"
+            }
+        ];
+        setClips(mockClips);
+        setProcessing(false);
+        setUploading(false);
+        setUploadedFile(null);
+        // Add a soft warning instead of blocking UX
+        setError(reason ? `${reason} • Showing sample AI-generated clips to demonstrate the workflow.` : "Showing sample AI-generated clips to demonstrate the workflow.");
+    };
     const onDrop = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "SmartVideoClipsPage.useCallback[onDrop]": (acceptedFiles)=>{
             if (acceptedFiles.length > 0) {
@@ -65,7 +94,11 @@ function SmartVideoClipsPage() {
         disabled: uploading || processing
     });
     const handleUploadAndProcess = async ()=>{
-        if (!uploadedFile) return;
+        // If no file, directly show mock clips to demonstrate flow
+        if (!uploadedFile) {
+            generateMockClips("No video uploaded. Using mock clips.");
+            return;
+        }
         try {
             setUploading(true);
             setError(null);
@@ -86,7 +119,7 @@ function SmartVideoClipsPage() {
             }).catch((err)=>{
                 clearInterval(uploadInterval);
                 console.error("❌ Network error:", err);
-                throw new Error("Network error: Unable to reach server. Is your dev server running?");
+                throw new Error("Network error: Unable to reach server. Using mock clips to demonstrate the workflow.");
             });
             clearInterval(uploadInterval);
             console.log("📊 Response status:", uploadResponse.status);
@@ -95,7 +128,7 @@ function SmartVideoClipsPage() {
                         error: "Unknown error"
                     }));
                 console.error("❌ Server error:", errorData);
-                throw new Error(errorData.error || `Server error: ${uploadResponse.status}`);
+                throw new Error(errorData.error || `Server error: ${uploadResponse.status}. Using mock clips to demonstrate the workflow.`);
             }
             const { videoUrl } = await uploadResponse.json();
             console.log("✅ Upload successful! URL:", videoUrl);
@@ -124,7 +157,7 @@ function SmartVideoClipsPage() {
                 })
             }).catch((err)=>{
                 console.error("❌ n8n network error:", err);
-                throw new Error("Unable to reach n8n webhook. Check your NEXT_PUBLIC_N8N_WEBHOOK_URL");
+                throw new Error("Unable to reach n8n webhook. Using mock clips to demonstrate the workflow.");
             });
             console.log("📊 n8n response status:", n8nResponse.status);
             if (!n8nResponse.ok) {
@@ -132,18 +165,24 @@ function SmartVideoClipsPage() {
                         error: "Unknown error"
                     }));
                 console.error("❌ n8n error:", errorData);
-                throw new Error(errorData.error || "n8n processing failed");
+                throw new Error(errorData.error || "n8n processing failed. Using mock clips instead.");
             }
             const result = await n8nResponse.json();
             console.log("✅ Processing complete!", result);
-            setClips(result.clips || []);
+            const receivedClips = result.clips || [];
+            if (!receivedClips.length) {
+                // If n8n returns empty, still show mocks
+                generateMockClips("No clips returned from n8n. Using mock clips.");
+                return;
+            }
+            setClips(receivedClips);
             setProcessing(false);
             setUploadedFile(null);
         } catch (err) {
             console.error("❌ Full error:", err);
-            setError(err instanceof Error ? err.message : "An unexpected error occurred");
-            setUploading(false);
-            setProcessing(false);
+            const message = err instanceof Error ? err.message : "An unexpected error occurred. Using mock clips.";
+            // Show mock clips but also surface the reason
+            generateMockClips(message);
         }
     };
     const resetUpload = ()=>{
@@ -151,6 +190,8 @@ function SmartVideoClipsPage() {
         setClips([]);
         setError(null);
         setUploadProgress(0);
+        setUploading(false);
+        setProcessing(false);
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "min-h-screen bg-[#0f0f0f] text-white",
@@ -162,20 +203,20 @@ function SmartVideoClipsPage() {
                         className: "absolute top-0 right-0 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl"
                     }, void 0, false, {
                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                        lineNumber: 157,
+                        lineNumber: 223,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "absolute bottom-0 left-0 h-96 w-96 rounded-full bg-cyan-500/5 blur-3xl"
                     }, void 0, false, {
                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                        lineNumber: 158,
+                        lineNumber: 224,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                lineNumber: 156,
+                lineNumber: 222,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -189,14 +230,14 @@ function SmartVideoClipsPage() {
                                 className: "h-5 w-5"
                             }, void 0, false, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 168,
+                                lineNumber: 234,
                                 columnNumber: 11
                             }, this),
                             "Back to Features"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                        lineNumber: 164,
+                        lineNumber: 230,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -211,36 +252,37 @@ function SmartVideoClipsPage() {
                                             className: "h-8 w-8 text-white"
                                         }, void 0, false, {
                                             fileName: "[project]/app/smart-video-clips/page.tsx",
-                                            lineNumber: 176,
+                                            lineNumber: 242,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 175,
+                                        lineNumber: 241,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                         className: "text-4xl md:text-5xl font-bold text-white",
                                         children: [
-                                            "Smart Video ",
+                                            "Smart Video",
+                                            " ",
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-transparent bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text",
                                                 children: "Clips"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 179,
-                                                columnNumber: 27
+                                                lineNumber: 246,
+                                                columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 178,
+                                        lineNumber: 244,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 174,
+                                lineNumber: 240,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -248,13 +290,13 @@ function SmartVideoClipsPage() {
                                 children: "Upload your long-form video and let AI convert it into viral short clips optimized for LinkedIn, Instagram, and YouTube"
                             }, void 0, false, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 182,
+                                lineNumber: 251,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                        lineNumber: 173,
+                        lineNumber: 239,
                         columnNumber: 9
                     }, this),
                     clips.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -268,7 +310,7 @@ function SmartVideoClipsPage() {
                                         ...getInputProps()
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 196,
+                                        lineNumber: 270,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -279,7 +321,7 @@ function SmartVideoClipsPage() {
                                                     className: "h-16 w-16 text-purple-400 mb-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 201,
+                                                    lineNumber: 275,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -287,7 +329,7 @@ function SmartVideoClipsPage() {
                                                     children: isDragActive ? "Drop your video here" : "Upload Your Video"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 202,
+                                                    lineNumber: 276,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -295,15 +337,15 @@ function SmartVideoClipsPage() {
                                                     children: "Drag & drop your video file here, or click to browse"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 205,
+                                                    lineNumber: 279,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-sm text-white/40",
-                                                    children: "Supports MP4, MOV, AVI, MKV, WEBM (Max 500MB)"
+                                                    children: "Supports MP4, MOV, AVI, MKV, WEBM (Max 500MB). If you skip upload, sample clips will be generated."
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 208,
+                                                    lineNumber: 282,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
@@ -313,7 +355,7 @@ function SmartVideoClipsPage() {
                                                     className: "h-16 w-16 text-green-400 mb-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 214,
+                                                    lineNumber: 289,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -321,7 +363,7 @@ function SmartVideoClipsPage() {
                                                     children: uploadedFile.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 215,
+                                                    lineNumber: 290,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -332,14 +374,14 @@ function SmartVideoClipsPage() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 216,
+                                                    lineNumber: 291,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true)
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 198,
+                                        lineNumber: 272,
                                         columnNumber: 15
                                     }, this),
                                     uploading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -353,7 +395,7 @@ function SmartVideoClipsPage() {
                                                         children: "Uploading..."
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                        lineNumber: 227,
+                                                        lineNumber: 302,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -364,13 +406,13 @@ function SmartVideoClipsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                        lineNumber: 228,
+                                                        lineNumber: 303,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 226,
+                                                lineNumber: 301,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -382,18 +424,18 @@ function SmartVideoClipsPage() {
                                                     }
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 231,
+                                                    lineNumber: 306,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 230,
+                                                lineNumber: 305,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 225,
+                                        lineNumber: 300,
                                         columnNumber: 17
                                     }, this),
                                     processing && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -403,7 +445,7 @@ function SmartVideoClipsPage() {
                                                 className: "h-12 w-12 text-purple-400 animate-spin mb-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 242,
+                                                lineNumber: 317,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -411,7 +453,7 @@ function SmartVideoClipsPage() {
                                                 children: "AI is generating your viral clips..."
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 243,
+                                                lineNumber: 318,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -419,19 +461,19 @@ function SmartVideoClipsPage() {
                                                 children: "This may take a few minutes"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 244,
+                                                lineNumber: 319,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 241,
+                                        lineNumber: 316,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 190,
+                                lineNumber: 260,
                                 columnNumber: 13
                             }, this),
                             error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -441,17 +483,17 @@ function SmartVideoClipsPage() {
                                         className: "h-5 w-5 text-red-400 flex-shrink-0 mt-0.5"
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 252,
+                                        lineNumber: 327,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
                                                 className: "font-semibold text-red-400 mb-1",
-                                                children: "Error"
+                                                children: "Notice"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 254,
+                                                lineNumber: 329,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -459,52 +501,52 @@ function SmartVideoClipsPage() {
                                                 children: error
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 255,
+                                                lineNumber: 330,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 253,
+                                        lineNumber: 328,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 251,
+                                lineNumber: 326,
                                 columnNumber: 15
                             }, this),
-                            uploadedFile && !processing && !uploading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            !processing && !uploading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "mt-8 flex gap-4 justify-center",
                                 children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    uploadedFile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         onClick: resetUpload,
                                         className: "px-6 py-3 rounded-xl border border-gray-700 bg-[#1a1a1a]/80 hover:bg-[#2a2a2a] transition-colors",
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 263,
-                                        columnNumber: 17
+                                        lineNumber: 339,
+                                        columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         onClick: handleUploadAndProcess,
                                         className: "px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 transition-all font-semibold shadow-lg shadow-purple-500/25",
-                                        children: "Generate Clips"
+                                        children: uploadedFile ? "Generate Clips" : "Generate Sample Clips"
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 269,
+                                        lineNumber: 346,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 262,
+                                lineNumber: 337,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                        lineNumber: 189,
+                        lineNumber: 259,
                         columnNumber: 11
                     }, this),
                     clips.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -520,7 +562,7 @@ function SmartVideoClipsPage() {
                                                 children: "Your Viral Clips are Ready!"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 285,
+                                                lineNumber: 362,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -531,13 +573,13 @@ function SmartVideoClipsPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 286,
+                                                lineNumber: 363,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 284,
+                                        lineNumber: 361,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -546,13 +588,13 @@ function SmartVideoClipsPage() {
                                         children: "Upload New Video"
                                     }, void 0, false, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 288,
+                                        lineNumber: 365,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 283,
+                                lineNumber: 360,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -569,12 +611,12 @@ function SmartVideoClipsPage() {
                                                     preload: "metadata"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                    lineNumber: 304,
+                                                    lineNumber: 381,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 303,
+                                                lineNumber: 380,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -588,7 +630,7 @@ function SmartVideoClipsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                        lineNumber: 314,
+                                                        lineNumber: 391,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -599,7 +641,7 @@ function SmartVideoClipsPage() {
                                                                 children: clip.platform
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                                lineNumber: 316,
+                                                                lineNumber: 393,
                                                                 columnNumber: 23
                                                             }, this),
                                                             clip.duration && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -610,13 +652,13 @@ function SmartVideoClipsPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                                lineNumber: 320,
+                                                                lineNumber: 397,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                        lineNumber: 315,
+                                                        lineNumber: 392,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -628,49 +670,49 @@ function SmartVideoClipsPage() {
                                                                 className: "h-4 w-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                                lineNumber: 330,
+                                                                lineNumber: 407,
                                                                 columnNumber: 23
                                                             }, this),
                                                             "Download"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                        lineNumber: 325,
+                                                        lineNumber: 402,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                                lineNumber: 313,
+                                                lineNumber: 390,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, clip.id, true, {
                                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                                        lineNumber: 298,
+                                        lineNumber: 375,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                                lineNumber: 296,
+                                lineNumber: 373,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/smart-video-clips/page.tsx",
-                        lineNumber: 282,
+                        lineNumber: 359,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/smart-video-clips/page.tsx",
-                lineNumber: 162,
+                lineNumber: 228,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/smart-video-clips/page.tsx",
-        lineNumber: 154,
+        lineNumber: 220,
         columnNumber: 5
     }, this);
 }

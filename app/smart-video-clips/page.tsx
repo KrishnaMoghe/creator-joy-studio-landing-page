@@ -21,20 +21,57 @@ export default function SmartVideoClipsPage() {
   const [error, setError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
 
+  const generateMockClips = (reason: string) => {
+    console.log("🎬 Using mock clips. Reason:", reason)
+
+    const mockClips: ClipResult[] = [
+      {
+        id: `mock_clip_1_${Date.now()}`,
+        url: "/demo/demo-clip-1.mp4", // put any public demo video or leave as placeholder
+        duration: 32,
+        platform: "Instagram",
+      },
+      {
+        id: `mock_clip_2_${Date.now()}`,
+        url: "/demo/demo-clip-2.mp4",
+        duration: 45,
+        platform: "YouTube",
+      },
+      {
+        id: `mock_clip_3_${Date.now()}`,
+        url: "/demo/demo-clip-3.mp4",
+        duration: 28,
+        platform: "LinkedIn",
+      },
+    ]
+
+    setClips(mockClips)
+    setProcessing(false)
+    setUploading(false)
+    setUploadedFile(null)
+
+    // Add a soft warning instead of blocking UX
+    setError(
+      reason
+        ? `${reason} • Showing sample AI-generated clips to demonstrate the workflow.`
+        : "Showing sample AI-generated clips to demonstrate the workflow."
+    )
+  }
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0]
-      
+
       if (!file.type.startsWith("video/")) {
         setError("Please upload a valid video file")
         return
       }
-      
+
       if (file.size > 500 * 1024 * 1024) {
         setError("Video file size must be less than 500MB")
         return
       }
-      
+
       setUploadedFile(file)
       setError(null)
     }
@@ -43,14 +80,18 @@ export default function SmartVideoClipsPage() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"]
+      "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"],
     },
     maxFiles: 1,
-    disabled: uploading || processing
+    disabled: uploading || processing,
   })
 
   const handleUploadAndProcess = async () => {
-    if (!uploadedFile) return
+    // If no file, directly show mock clips to demonstrate flow
+    if (!uploadedFile) {
+      generateMockClips("No video uploaded. Using mock clips.")
+      return
+    }
 
     try {
       setUploading(true)
@@ -61,7 +102,12 @@ export default function SmartVideoClipsPage() {
       formData.append("video", uploadedFile)
 
       console.log("📤 Starting upload...")
-      console.log("📁 File:", uploadedFile.name, `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`, uploadedFile.type)
+      console.log(
+        "📁 File:",
+        uploadedFile.name,
+        `${(uploadedFile.size / 1024 / 1024).toFixed(2)}MB`,
+        uploadedFile.type
+      )
 
       const uploadInterval = setInterval(() => {
         setUploadProgress((prev) => {
@@ -73,27 +119,32 @@ export default function SmartVideoClipsPage() {
       const uploadResponse = await fetch("/api/upload-video", {
         method: "POST",
         body: formData,
-      }).catch(err => {
+      }).catch((err) => {
         clearInterval(uploadInterval)
         console.error("❌ Network error:", err)
-        throw new Error("Network error: Unable to reach server. Is your dev server running?")
+        throw new Error(
+          "Network error: Unable to reach server. Using mock clips to demonstrate the workflow."
+        )
       })
 
       clearInterval(uploadInterval)
-      
+
       console.log("📊 Response status:", uploadResponse.status)
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json().catch(() => ({ error: "Unknown error" }))
         console.error("❌ Server error:", errorData)
-        throw new Error(errorData.error || `Server error: ${uploadResponse.status}`)
+        throw new Error(
+          errorData.error ||
+            `Server error: ${uploadResponse.status}. Using mock clips to demonstrate the workflow.`
+        )
       }
 
       const { videoUrl } = await uploadResponse.json()
       console.log("✅ Upload successful! URL:", videoUrl)
 
       setUploadProgress(100)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
       setUploading(false)
       setProcessing(true)
@@ -103,7 +154,9 @@ export default function SmartVideoClipsPage() {
       console.log("🔗 n8n URL:", n8nUrl || "NOT SET")
 
       if (!n8nUrl || n8nUrl === "https://your-n8n-instance.com/webhook/video-upload") {
-        throw new Error("n8n webhook URL not configured. Please set NEXT_PUBLIC_N8N_WEBHOOK_URL in .env.local")
+        throw new Error(
+          "n8n webhook URL not configured. Using mock clips to demonstrate the workflow."
+        )
       }
 
       const n8nResponse = await fetch(n8nUrl, {
@@ -116,9 +169,11 @@ export default function SmartVideoClipsPage() {
           userId: "user_123",
           platforms: ["LinkedIn", "Instagram", "YouTube"],
         }),
-      }).catch(err => {
+      }).catch((err) => {
         console.error("❌ n8n network error:", err)
-        throw new Error("Unable to reach n8n webhook. Check your NEXT_PUBLIC_N8N_WEBHOOK_URL")
+        throw new Error(
+          "Unable to reach n8n webhook. Using mock clips to demonstrate the workflow."
+        )
       })
 
       console.log("📊 n8n response status:", n8nResponse.status)
@@ -126,20 +181,29 @@ export default function SmartVideoClipsPage() {
       if (!n8nResponse.ok) {
         const errorData = await n8nResponse.json().catch(() => ({ error: "Unknown error" }))
         console.error("❌ n8n error:", errorData)
-        throw new Error(errorData.error || "n8n processing failed")
+        throw new Error(errorData.error || "n8n processing failed. Using mock clips instead.")
       }
 
       const result = await n8nResponse.json()
       console.log("✅ Processing complete!", result)
 
-      setClips(result.clips || [])
+      const receivedClips: ClipResult[] = result.clips || []
+
+      if (!receivedClips.length) {
+        // If n8n returns empty, still show mocks
+        generateMockClips("No clips returned from n8n. Using mock clips.")
+        return
+      }
+
+      setClips(receivedClips)
       setProcessing(false)
       setUploadedFile(null)
     } catch (err) {
       console.error("❌ Full error:", err)
-      setError(err instanceof Error ? err.message : "An unexpected error occurred")
-      setUploading(false)
-      setProcessing(false)
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred. Using mock clips."
+      // Show mock clips but also surface the reason
+      generateMockClips(message)
     }
   }
 
@@ -148,6 +212,8 @@ export default function SmartVideoClipsPage() {
     setClips([])
     setError(null)
     setUploadProgress(0)
+    setUploading(false)
+    setProcessing(false)
   }
 
   return (
@@ -161,8 +227,8 @@ export default function SmartVideoClipsPage() {
       {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}
-        <Link 
-          href="/#features" 
+        <Link
+          href="/#features"
           className="inline-flex items-center gap-2 mb-8 text-white/60 hover:text-white transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -176,11 +242,15 @@ export default function SmartVideoClipsPage() {
               <Film className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white">
-              Smart Video <span className="text-transparent bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text">Clips</span>
+              Smart Video{" "}
+              <span className="text-transparent bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text">
+                Clips
+              </span>
             </h1>
           </div>
           <p className="text-lg text-white/60 max-w-2xl mx-auto">
-            Upload your long-form video and let AI convert it into viral short clips optimized for LinkedIn, Instagram, and YouTube
+            Upload your long-form video and let AI convert it into viral short clips optimized for
+            LinkedIn, Instagram, and YouTube
           </p>
         </div>
 
@@ -191,10 +261,14 @@ export default function SmartVideoClipsPage() {
               {...getRootProps()}
               className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 ${
                 isDragActive ? "border-purple-500 bg-purple-500/10" : "border-gray-700 bg-[#1a1a1a]/80"
-              } ${uploading || processing ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-purple-500/50"} backdrop-blur-xl p-12`}
+              } ${
+                uploading || processing
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer hover:border-purple-500/50"
+              } backdrop-blur-xl p-12`}
             >
               <input {...getInputProps()} />
-              
+
               <div className="flex flex-col items-center justify-center text-center">
                 {!uploadedFile ? (
                   <>
@@ -206,7 +280,8 @@ export default function SmartVideoClipsPage() {
                       Drag & drop your video file here, or click to browse
                     </p>
                     <p className="text-sm text-white/40">
-                      Supports MP4, MOV, AVI, MKV, WEBM (Max 500MB)
+                      Supports MP4, MOV, AVI, MKV, WEBM (Max 500MB). If you skip upload, sample clips
+                      will be generated.
                     </p>
                   </>
                 ) : (
@@ -246,31 +321,33 @@ export default function SmartVideoClipsPage() {
               )}
             </div>
 
-            {/* Error Message */}
+            {/* Error / Info Message */}
             {error && (
               <div className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-red-400 mb-1">Error</h4>
+                  <h4 className="font-semibold text-red-400 mb-1">Notice</h4>
                   <p className="text-sm text-red-400/80">{error}</p>
                 </div>
               </div>
             )}
 
             {/* Action Buttons */}
-            {uploadedFile && !processing && !uploading && (
+            {!processing && !uploading && (
               <div className="mt-8 flex gap-4 justify-center">
-                <button
-                  onClick={resetUpload}
-                  className="px-6 py-3 rounded-xl border border-gray-700 bg-[#1a1a1a]/80 hover:bg-[#2a2a2a] transition-colors"
-                >
-                  Cancel
-                </button>
+                {uploadedFile && (
+                  <button
+                    onClick={resetUpload}
+                    className="px-6 py-3 rounded-xl border border-gray-700 bg-[#1a1a1a]/80 hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
                 <button
                   onClick={handleUploadAndProcess}
                   className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 transition-all font-semibold shadow-lg shadow-purple-500/25"
                 >
-                  Generate Clips
+                  {uploadedFile ? "Generate Clips" : "Generate Sample Clips"}
                 </button>
               </div>
             )}

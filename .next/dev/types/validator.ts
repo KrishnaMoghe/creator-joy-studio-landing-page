@@ -65,6 +65,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/smart-calendar/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/smart-calendar">> = Specific
+  const handler = {} as typeof import("../../../app/smart-calendar/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/smart-video-clips/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/smart-video-clips">> = Specific
@@ -87,6 +96,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends AppPageConfig<"/viral-ad-creator">> = Specific
   const handler = {} as typeof import("../../../app/viral-ad-creator/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/api/analyze-schedule/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/analyze-schedule">> = Specific
+  const handler = {} as typeof import("../../../app/api/analyze-schedule/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
